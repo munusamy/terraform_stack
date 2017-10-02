@@ -1,21 +1,20 @@
 data "aws_instance" "jenkins_1b" {
-  count = "${length(var.common_instance_linux) * var.linux_ins_count}"
   filter {
     name = "tag:Name"
-    values = [ "${var.environment}_${element(split(",", lookup(var.common_instance_linux, element(data.aws_availability_zones.available.names, ceil(count.index / var.linux_ins_count)))), count.index % var.linux_ins_count)}" ]
+    values = [ "preprod_Jenkins_1b" ]
   }
 }
 
-output "show_jenkins" {
-  value = [ "${data.aws_instance.jenkins_1b.*.id}" ]
+data "aws_instance" "jenkins_1c" {
+  filter {
+    name = "tag:Name"
+    values = [ "preprod_Jenkins_1c" ]
+  }
 }
 
-/*
 # Create a Jenkins load balancer
-resource "aws_elb" "bar" {
+resource "aws_elb" "jenkins" {
   name               = "jenkins-terraform-elb"
-  availability_zones = "${var.elb_az}"
-
   listener {
     instance_port     = 8000
     instance_protocol = "http"
@@ -39,14 +38,14 @@ resource "aws_elb" "bar" {
     interval            = 30
   }
 
-  instances                   = ["${data.aws_instance.jenkins_tag.ids}"]
+  instances                   = ["${data.aws_instance.jenkins_1b.id}", "${data.aws_instance.jenkins_1c.id}" ]
+  subnets = ["subnet-c616dba1", "subnet-05b2a15d"]
   cross_zone_load_balancing   = true
   idle_timeout                = 400
   connection_draining         = true
   connection_draining_timeout = 400
-
+  
   tags {
     Name = "jenkins-terraform-elb"
   }
 }
-*/
